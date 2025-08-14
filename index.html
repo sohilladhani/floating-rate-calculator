@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Loan Calculator - Floating Interest Rate</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card-shadow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .progress-bar {
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .option-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .option-card.selected {
+            border: 2px solid #3B82F6;
+            background: linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+        }
+        
+        .donut-chart {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(#EF4444 0deg var(--interest-angle), #10B981 var(--interest-angle) 360deg);
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .donut-chart::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .print-hidden {
+            display: none;
+        }
+        
+        @media print {
+            .no-print { display: none !important; }
+            .print-hidden { display: block !important; }
+            .card-shadow { box-shadow: none !important; border: 1px solid #e5e7eb; }
+            .gradient-bg { background: #f3f4f6 !important; color: #1f2937 !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="gradient-bg text-white py-8 mb-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold mb-2">Home Loan Calculator</h1>
+                <p class="text-blue-100 text-lg">Floating Interest Rate Calculator - RBI Compliant</p>
+                <div class="mt-4 text-sm">
+                    <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full">Real-time Calculations</span>
+                    <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full ml-2">Three Strategic Options</span>
+                    <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full ml-2">Professional Grade</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <!-- Loan Progress Panel -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800 flex items-center">
+                    <span class="w-3 h-3 bg-blue-500 rounded-full mr-3"></span>
+                    Loan Overview & Progress
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-600" id="originalAmountDisplay">₹20,00,000</div>
+                        <div class="text-sm text-gray-600">Original Amount</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-green-600" id="amountPaidDisplay">₹4,50,619</div>
+                        <div class="text-sm text-gray-600">Amount Paid</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-orange-600" id="outstandingDisplay">₹18,29,112</div>
+                        <div class="text-sm text-gray-600">Outstanding</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-purple-600" id="progressDisplay">14.2%</div>
+                        <div class="text-sm text-gray-600">Progress</div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Loan Completion Progress</span>
+                        <span id="progressText">14.2% Complete</span>
+                    </div>
+                    <div class="bg-gray-200 rounded-full h-4">
+                        <div class="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full progress-bar" 
+                             id="mainProgressBar" style="width: 14.2%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>Start</span>
+                        <span id="emisPaidText">17 EMIs Paid</span>
+                        <span>Complete</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Loan Parameters</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Original Loan Amount (₹)</label>
+                            <input type="number" id="originalAmount" value="2000000" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-blue-500"
+                                   onchange="calculateAll()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Current Interest Rate (%)</label>
+                            <input type="number" id="currentRate" value="10.75" step="0.01" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-blue-500"
+                                   onchange="calculateAll()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">New Interest Rate (%)</label>
+                            <input type="number" id="newRate" value="8.75" step="0.01" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-green-500"
+                                   onchange="calculateAll()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Original Tenure (months)</label>
+                            <input type="number" id="originalTenure" value="120" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-blue-500"
+                                   onchange="calculateAll()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Calculated EMI (₹)</label>
+                            <div class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 font-semibold" 
+                                 id="calculatedEMIDisplay">₹26,507</div>
+                            <p class="text-xs text-gray-500 mt-1">Auto-calculated based on original loan terms</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">EMIs Paid So Far</label>
+                            <input type="number" id="emisPaid" value="17" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-blue-500"
+                                   onchange="calculateAll()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Income & DTI Analysis</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gross Annual Income (₹)</label>
+                            <input type="number" id="grossIncome" value="1200000" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-blue-500"
+                                   onchange="calculateAll()">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Other EMIs (₹)</label>
+                            <input type="number" id="otherEMIs" value="5000" 
+                                   class="w-full p-3 border border-gray-300 rounded-lg input-field focus:outline-none focus:border-blue-500"
+                                   onchange="calculateAll()">
+                        </div>
+                        
+                        <div class="pt-4 border-t">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Monthly Income</span>
+                                <span class="font-semibold" id="monthlyIncomeDisplay">₹1,00,000</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Total Monthly EMIs</span>
+                                <span class="font-semibold" id="totalEMIsDisplay">₹31,507</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Current DTI Ratio</span>
+                                <span class="font-semibold text-blue-600" id="currentDTIDisplay">31.5%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Quick Actions</h3>
+                    
+                    <div class="space-y-3">
+                        <button onclick="resetToDefaults()" 
+                                class="w-full bg-gray-500 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors font-medium">
+                            Reset to Default Values
+                        </button>
+                        <button onclick="testScenario('higher')" 
+                                class="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors font-medium">
+                            Test Higher Rate (+1%)
+                        </button>
+                        <button onclick="testScenario('lower')" 
+                                class="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 transition-colors font-medium">
+                            Test Lower Rate (-0.5%)
+                        </button>
+                        <button onclick="window.print()" 
+                                class="w-full bg-purple-500 text-white py-3 px-4 rounded-lg hover:bg-purple-600 transition-colors font-medium no-print">
+                            Print Report
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 mb-2">RBI Guidelines</h4>
+                        <p class="text-sm text-blue-700">As per RBI guidelines, you have the right to choose how to adjust your loan when rates change.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Three Strategic Options Dashboard -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 flex items-center">
+                <span class="w-3 h-3 bg-green-500 rounded-full mr-3"></span>
+                Three Strategic Options (RBI Compliant)
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Option 1: Keep Tenure -->
+                <div class="option-card bg-white rounded-xl p-6 card-shadow" id="option1" onclick="selectOption(1)">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">📅</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Keep Tenure Unchanged</h3>
+                        <p class="text-sm text-gray-600">Adjust EMI only</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">New EMI</span>
+                            <span class="font-bold text-blue-600" id="option1EMI">₹24,186</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Tenure</span>
+                            <span class="font-semibold" id="option1Tenure">103 months</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Interest</span>
+                            <span class="font-semibold" id="option1Interest">₹7,63,158</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">DTI Ratio</span>
+                            <span class="font-semibold" id="option1DTI">29.4%</span>
+                        </div>
+                        <div class="text-center mt-4">
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm" id="option1Savings">Save ₹2,321/month</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Option 2: Keep EMI -->
+                <div class="option-card bg-white rounded-xl p-6 card-shadow" id="option2" onclick="selectOption(2)">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">💰</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Keep EMI Unchanged</h3>
+                        <p class="text-sm text-gray-600">Adjust tenure only</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">EMI</span>
+                            <span class="font-semibold" id="option2EMI">₹26,507</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">New Tenure</span>
+                            <span class="font-bold text-green-600" id="option2Tenure">98 months</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Interest</span>
+                            <span class="font-semibold" id="option2Interest">₹7,71,574</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">DTI Ratio</span>
+                            <span class="font-semibold" id="option2DTI">31.8%</span>
+                        </div>
+                        <div class="text-center mt-4">
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm" id="option2Savings">Finish 5 months early</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Option 3: Balanced -->
+                <div class="option-card bg-white rounded-xl p-6 card-shadow" id="option3" onclick="selectOption(3)">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">⚖️</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800">Balanced Adjustment</h3>
+                        <p class="text-sm text-gray-600">Optimize both EMI & tenure</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">New EMI</span>
+                            <span class="font-bold text-purple-600" id="option3EMI">₹25,300</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">New Tenure</span>
+                            <span class="font-bold text-purple-600" id="option3Tenure">100 months</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Interest</span>
+                            <span class="font-semibold" id="option3Interest">₹7,67,366</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">DTI Ratio</span>
+                            <span class="font-semibold" id="option3DTI">30.6%</span>
+                        </div>
+                        <div class="text-center mt-4">
+                            <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm" id="option3Savings">Best of both worlds</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Comparison & Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Comparison Table -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Detailed Comparison</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-3 py-2 text-left text-gray-600">Aspect</th>
+                                <th class="px-3 py-2 text-center text-gray-600">Current</th>
+                                <th class="px-3 py-2 text-center text-gray-600">Best Option</th>
+                                <th class="px-3 py-2 text-center text-gray-600">Savings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t">
+                                <td class="px-3 py-2 font-medium">Interest Rate</td>
+                                <td class="px-3 py-2 text-center" id="tableCurrentRate">10.75%</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableNewRate">8.75%</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableRateSaving">-2.00%</td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-3 py-2 font-medium">EMI Amount</td>
+                                <td class="px-3 py-2 text-center" id="tableCurrentEMI">₹26,507</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableBestEMI">₹24,186</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableEMISaving">-₹2,321</td>
+                            </tr>
+                            <tr class="border-t">
+                                <td class="px-3 py-2 font-medium">Remaining Months</td>
+                                <td class="px-3 py-2 text-center" id="tableCurrentMonths">103</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableBestMonths">98</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableMonthsSaving">-5</td>
+                            </tr>
+                            <tr class="border-t bg-gray-50">
+                                <td class="px-3 py-2 font-medium">Total Interest</td>
+                                <td class="px-3 py-2 text-center" id="tableCurrentTotalInterest">₹9,01,109</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableBestTotalInterest">₹7,63,158</td>
+                                <td class="px-3 py-2 text-center text-green-600" id="tableTotalSaving">-₹1,37,951</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Payment Breakdown Chart -->
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Current Month Breakdown</h3>
+                
+                <div class="chart-container">
+                    <div class="donut-chart" id="paymentChart" style="--interest-angle: 180deg;"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-gray-800">EMI Split</div>
+                            <div class="text-sm text-gray-600">This Month</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-500" id="monthlyInterest">₹13,337</div>
+                        <div class="text-sm text-gray-600">Interest (<span id="interestPercent">50.3%</span>)</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-500" id="monthlyPrincipal">₹13,170</div>
+                        <div class="text-sm text-gray-600">Principal (<span id="principalPercent">49.7%</span>)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rate Sensitivity Analysis -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl p-6 card-shadow">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Rate Sensitivity Analysis</h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <div class="text-sm text-gray-600">@ 8.25%</div>
+                        <div class="font-bold text-green-600" id="rate825">95 months</div>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <div class="text-sm text-gray-600">@ 8.50%</div>
+                        <div class="font-bold text-green-600" id="rate850">96 months</div>
+                    </div>
+                    <div class="text-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                        <div class="text-sm text-gray-600">@ 8.75% (New)</div>
+                        <div class="font-bold text-blue-600" id="rateCurrent">98 months</div>
+                    </div>
+                    <div class="text-center p-3 bg-orange-50 rounded-lg">
+                        <div class="text-sm text-gray-600">@ 9.00%</div>
+                        <div class="font-bold text-orange-600" id="rate900">100 months</div>
+                    </div>
+                    <div class="text-center p-3 bg-red-50 rounded-lg">
+                        <div class="text-sm text-gray-600">@ 9.25%</div>
+                        <div class="font-bold text-red-600" id="rate925">102 months</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-yellow-50 rounded-lg">
+                    <p class="text-sm text-yellow-800">
+                        <strong>Floating Rate Impact:</strong> A 0.25% rate change typically affects your tenure by ±1-2 months 
+                        when keeping EMI constant. Plan accordingly for rate volatility.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Support Framework -->
+        <div class="bg-white rounded-xl p-6 card-shadow mb-8">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">Decision Support Framework</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <h4 class="font-semibold text-blue-800 mb-2">📊 Financial Health</h4>
+                    <div class="text-sm text-blue-700">
+                        <p class="mb-1">Current DTI: <span id="healthDTI" class="font-bold">31.5%</span></p>
+                        <p class="mb-1">Status: <span id="healthStatus" class="font-bold">Healthy</span></p>
+                        <p>Recommendation: <span id="healthReco" class="font-bold">Consider Option 1 for lower EMI</span></p>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <h4 class="font-semibold text-green-800 mb-2">💡 Smart Choice</h4>
+                    <div class="text-sm text-green-700">
+                        <p class="mb-1">Best Option: <span id="smartChoice" class="font-bold">Keep EMI Unchanged</span></p>
+                        <p class="mb-1">Benefit: <span id="smartBenefit" class="font-bold">Finish 5 months early</span></p>
+                        <p>Total Savings: <span id="smartSavings" class="font-bold">₹1,32,535</span></p>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-purple-50 rounded-lg">
+                    <h4 class="font-semibold text-purple-800 mb-2">🎯 Recommendation</h4>
+                    <div class="text-sm text-purple-700">
+                        <p class="mb-1">Age Factor: <span id="ageFactor" class="font-bold">Consider early completion</span></p>
+                        <p class="mb-1">Cash Flow: <span id="cashFlow" class="font-bold">Stable income supports current EMI</span></p>
+                        <p>Action: <span id="recommendedAction" class="font-bold">Proceed with Option 2</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-2">📋 Next Steps</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">1. Review with Bank</p>
+                        <p class="text-gray-600">Discuss your preferred option with your loan officer</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">2. Document Changes</p>
+                        <p class="text-gray-600">Get written confirmation of new terms</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">3. Update Auto-Pay</p>
+                        <p class="text-gray-600">Adjust standing instructions if EMI changes</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700 mb-1">4. Monitor Rates</p>
+                        <p class="text-gray-600">Keep track of future floating rate changes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RBI Compliance Information -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-6 mb-8">
+            <h3 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="text-2xl mr-3">🏛️</span>
+                RBI Guidelines & Your Rights
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold mb-2">Your Rights as a Borrower:</h4>
+                    <ul class="text-sm space-y-1 text-blue-100">
+                        <li>• Choice in how to adjust your loan terms</li>
+                        <li>• Clear communication about rate changes</li>
+                        <li>• Option to switch to fixed rate</li>
+                        <li>• No negative amortization</li>
+                        <li>• Quarterly statements with full details</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">Bank's Obligations:</h4>
+                    <ul class="text-sm space-y-1 text-blue-100">
+                        <li>• Transparent disclosure of all charges</li>
+                        <li>• Advance notice of rate changes</li>
+                        <li>• Offer multiple adjustment options</li>
+                        <li>• Written consent for major changes</li>
+                        <li>• Clear explanation of implications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-gray-500 text-sm mb-4">
+            <p class="mb-2">This calculator is for informational purposes only. Please consult with your financial advisor for personalized advice.</p>
+            <p>Calculations based on RBI guidelines effective August 2023 | Last updated: <span id="lastUpdated"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSelectedOption = 2; // Default to Option 2 (Keep EMI)
+        
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-IN').format(Math.round(num));
+        }
+
+        // Mathematical calculation functions
+        function calculateOutstanding(principal, rate, tenure, paid) {
+            const monthlyRate = rate / 1200;
+            const factor1 = Math.pow(1 + monthlyRate, tenure);
+            const factor2 = Math.pow(1 + monthlyRate, paid);
+            return principal * (factor1 - factor2) / (factor1 - 1);
+        }
+
+        function calculateTenure(principal, rate, emi) {
+            const monthlyRate = rate / 1200;
+            const ratio = (principal * monthlyRate) / emi;
+            if (ratio >= 1) return 999; // Invalid scenario
+            return Math.ceil(-Math.log(1 - ratio) / Math.log(1 + monthlyRate));
+        }
+
+        function calculateEMI(principal, rate, tenure) {
+            const monthlyRate = rate / 1200;
+            const factor = Math.pow(1 + monthlyRate, tenure);
+            return principal * monthlyRate * factor / (factor - 1);
+        }
+
+        function calculateTotalInterest(emi, tenure, principal) {
+            return (emi * tenure) - principal;
+        }
+
+        function calculateDTI(emi, otherEMIs, monthlyIncome) {
+            return ((emi + otherEMIs) / monthlyIncome) * 100;
+        }
+
+        // Main calculation function
+        function calculateAll() {
+            try {
+                // Get input values
+                const originalAmount = parseFloat(document.getElementById('originalAmount').value) || 2000000;
+                const currentRate = parseFloat(document.getElementById('currentRate').value) || 10.75;
+                const newRate = parseFloat(document.getElementById('newRate').value) || 8.75;
+                const originalTenure = parseInt(document.getElementById('originalTenure').value) || 120;
+                const emisPaid = parseInt(document.getElementById('emisPaid').value) || 17;
+                const grossIncome = parseFloat(document.getElementById('grossIncome').value) || 1200000;
+                const otherEMIs = parseFloat(document.getElementById('otherEMIs').value) || 5000;
+
+                // Calculate EMI based on original loan terms
+                const currentEMI = calculateEMI(originalAmount, currentRate, originalTenure);
+                
+                // Update the calculated EMI display
+                document.getElementById('calculatedEMIDisplay').textContent = formatCurrency(currentEMI);
+
+                // Calculate derived values
+                const outstanding = calculateOutstanding(originalAmount, currentRate, originalTenure, emisPaid);
+                const amountPaid = emisPaid * currentEMI;
+                const principalPaid = originalAmount - outstanding;
+                const interestPaid = amountPaid - principalPaid;
+                const progress = (emisPaid / originalTenure) * 100;
+                const monthlyIncome = grossIncome / 12;
+                const remainingTenure = originalTenure - emisPaid;
+
+                // Update loan overview
+                document.getElementById('originalAmountDisplay').textContent = formatCurrency(originalAmount);
+                document.getElementById('amountPaidDisplay').textContent = formatCurrency(amountPaid);
+                document.getElementById('outstandingDisplay').textContent = formatCurrency(outstanding);
+                document.getElementById('progressDisplay').textContent = progress.toFixed(1) + '%';
+                document.getElementById('progressText').textContent = progress.toFixed(1) + '% Complete';
+                document.getElementById('mainProgressBar').style.width = progress + '%';
+                document.getElementById('emisPaidText').textContent = emisPaid + ' EMIs Paid';
+
+                // Update income analysis
+                document.getElementById('monthlyIncomeDisplay').textContent = formatCurrency(monthlyIncome);
+                document.getElementById('totalEMIsDisplay').textContent = formatCurrency(currentEMI + otherEMIs);
+                document.getElementById('currentDTIDisplay').textContent = calculateDTI(currentEMI, otherEMIs, monthlyIncome).toFixed(1) + '%';
+
+                // Calculate three options
+                
+                // Option 1: Keep tenure unchanged, adjust EMI
+                const option1Tenure = remainingTenure;
+                const option1EMI = calculateEMI(outstanding, newRate, option1Tenure);
+                const option1Interest = calculateTotalInterest(option1EMI, option1Tenure, outstanding);
+                const option1DTI = calculateDTI(option1EMI, otherEMIs, monthlyIncome);
+
+                // Option 2: Keep EMI unchanged, adjust tenure
+                const option2EMI = currentEMI;
+                const option2Tenure = calculateTenure(outstanding, newRate, option2EMI);
+                const option2Interest = calculateTotalInterest(option2EMI, option2Tenure, outstanding);
+                const option2DTI = calculateDTI(option2EMI, otherEMIs, monthlyIncome);
+
+                // Option 3: Balanced approach (reduce both EMI and tenure moderately)
+                const targetTenureReduction = Math.floor((remainingTenure - option2Tenure) * 0.6);
+                const option3Tenure = remainingTenure - targetTenureReduction;
+                const option3EMI = calculateEMI(outstanding, newRate, option3Tenure);
+                const option3Interest = calculateTotalInterest(option3EMI, option3Tenure, outstanding);
+                const option3DTI = calculateDTI(option3EMI, otherEMIs, monthlyIncome);
+
+                // Update Option 1
+                document.getElementById('option1EMI').textContent = formatCurrency(option1EMI);
+                document.getElementById('option1Tenure').textContent = option1Tenure + ' months';
+                document.getElementById('option1Interest').textContent = formatCurrency(option1Interest);
+                document.getElementById('option1DTI').textContent = option1DTI.toFixed(1) + '%';
+                document.getElementById('option1Savings').textContent = 'Save ' + formatCurrency(currentEMI - option1EMI) + '/month';
+
+                // Update Option 2
+                document.getElementById('option2EMI').textContent = formatCurrency(option2EMI);
+                document.getElementById('option2Tenure').textContent = option2Tenure + ' months';
+                document.getElementById('option2Interest').textContent = formatCurrency(option2Interest);
+                document.getElementById('option2DTI').textContent = option2DTI.toFixed(1) + '%';
+                document.getElementById('option2Savings').textContent = 'Finish ' + (remainingTenure - option2Tenure) + ' months early';
+
+                // Update Option 3
+                document.getElementById('option3EMI').textContent = formatCurrency(option3EMI);
+                document.getElementById('option3Tenure').textContent = option3Tenure + ' months';
+                document.getElementById('option3Interest').textContent = formatCurrency(option3Interest);
+                document.getElementById('option3DTI').textContent = option3DTI.toFixed(1) + '%';
+                document.getElementById('option3Savings').textContent = 'Balanced benefits';
+
+                // Update comparison table
+                const currentTotalInterest = calculateTotalInterest(currentEMI, remainingTenure, outstanding);
+                document.getElementById('tableCurrentRate').textContent = currentRate + '%';
+                document.getElementById('tableNewRate').textContent = newRate + '%';
+                document.getElementById('tableRateSaving').textContent = '-' + (currentRate - newRate).toFixed(2) + '%';
+                document.getElementById('tableCurrentEMI').textContent = formatCurrency(currentEMI);
+                document.getElementById('tableBestEMI').textContent = formatCurrency(option1EMI);
+                document.getElementById('tableEMISaving').textContent = '-' + formatCurrency(currentEMI - option1EMI);
+                document.getElementById('tableCurrentMonths').textContent = remainingTenure;
+                document.getElementById('tableBestMonths').textContent = option2Tenure;
+                document.getElementById('tableMonthsSaving').textContent = '-' + (remainingTenure - option2Tenure);
+                document.getElementById('tableCurrentTotalInterest').textContent = formatCurrency(currentTotalInterest);
+                document.getElementById('tableBestTotalInterest').textContent = formatCurrency(option1Interest);
+                document.getElementById('tableTotalSaving').textContent = '-' + formatCurrency(currentTotalInterest - option1Interest);
+
+                // Update current month breakdown with new rate
+                const monthlyInterest = Math.round(outstanding * newRate / 1200);
+                const monthlyPrincipal = currentEMI - monthlyInterest;
+                const interestPercent = (monthlyInterest / currentEMI * 100);
+                const principalPercent = (monthlyPrincipal / currentEMI * 100);
+
+                document.getElementById('monthlyInterest').textContent = formatCurrency(monthlyInterest);
+                document.getElementById('monthlyPrincipal').textContent = formatCurrency(monthlyPrincipal);
+                document.getElementById('interestPercent').textContent = interestPercent.toFixed(1) + '%';
+                document.getElementById('principalPercent').textContent = principalPercent.toFixed(1) + '%';
+
+                // Update donut chart
+                const chartElement = document.getElementById('paymentChart');
+                chartElement.style.setProperty('--interest-angle', (interestPercent * 3.6) + 'deg');
+
+                // Update rate sensitivity analysis
+                const rates = [8.25, 8.50, newRate, 9.00, 9.25];
+                const rateIds = ['rate825', 'rate850', 'rateCurrent', 'rate900', 'rate925'];
+                
+                rates.forEach((rate, index) => {
+                    const tenure = calculateTenure(outstanding, rate, currentEMI);
+                    if (rateIds[index]) {
+                        document.getElementById(rateIds[index]).textContent = tenure + ' months';
+                    }
+                });
+
+                // Update decision support
+                const currentDTI = calculateDTI(currentEMI, otherEMIs, monthlyIncome);
+                document.getElementById('healthDTI').textContent = currentDTI.toFixed(1) + '%';
+                
+                let healthStatus, healthReco, smartChoice, smartBenefit, smartSavings;
+                
+                if (currentDTI < 30) {
+                    healthStatus = 'Excellent';
+                    healthReco = 'You can handle higher EMIs safely';
+                } else if (currentDTI < 40) {
+                    healthStatus = 'Healthy';
+                    healthReco = 'Current EMI levels are manageable';
+                } else {
+                    healthStatus = 'Stretched';
+                    healthReco = 'Consider reducing EMI burden';
+                }
+
+                // Determine smart choice based on best total interest savings
+                const options = [
+                    { name: 'Keep Tenure Unchanged', interest: option1Interest, savings: currentTotalInterest - option1Interest },
+                    { name: 'Keep EMI Unchanged', interest: option2Interest, savings: currentTotalInterest - option2Interest },
+                    { name: 'Balanced Adjustment', interest: option3Interest, savings: currentTotalInterest - option3Interest }
+                ];
+
+                const bestOption = options.reduce((best, current) => 
+                    current.savings > best.savings ? current : best);
+
+                smartChoice = bestOption.name;
+                smartSavings = formatCurrency(bestOption.savings);
+                
+                if (bestOption.name === 'Keep EMI Unchanged') {
+                    smartBenefit = 'Finish ' + (remainingTenure - option2Tenure) + ' months early';
+                } else if (bestOption.name === 'Keep Tenure Unchanged') {
+                    smartBenefit = 'Save ' + formatCurrency(currentEMI - option1EMI) + '/month';
+                } else {
+                    smartBenefit = 'Optimal balance of EMI and tenure';
+                }
+
+                document.getElementById('healthStatus').textContent = healthStatus;
+                document.getElementById('healthReco').textContent = healthReco;
+                document.getElementById('smartChoice').textContent = smartChoice;
+                document.getElementById('smartBenefit').textContent = smartBenefit;
+                document.getElementById('smartSavings').textContent = smartSavings;
+
+                // Age and cash flow recommendations
+                document.getElementById('ageFactor').textContent = 'Consider early completion';
+                document.getElementById('cashFlow').textContent = currentDTI < 35 ? 'Stable income supports current EMI' : 'Monitor cash flow carefully';
+                document.getElementById('recommendedAction').textContent = healthStatus === 'Stretched' ? 'Proceed with Option 1' : 'Proceed with Option 2';
+
+            } catch (error) {
+                console.error('Calculation error:', error);
+                alert('Please check your input values. Some calculations may be invalid.');
+            }
+        }
+
+        // Option selection
+        function selectOption(optionNumber) {
+            // Remove previous selection
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById('option' + i).classList.remove('selected');
+            }
+            
+            // Add selection to clicked option
+            document.getElementById('option' + optionNumber).classList.add('selected');
+            currentSelectedOption = optionNumber;
+            
+            // Add visual feedback
+            const selectedCard = document.getElementById('option' + optionNumber);
+            selectedCard.classList.add('pulse-animation');
+            setTimeout(() => {
+                selectedCard.classList.remove('pulse-animation');
+            }, 1000);
+        }
+
+        // Quick action functions
+        function resetToDefaults() {
+            document.getElementById('originalAmount').value = 2000000;
+            document.getElementById('currentRate').value = 10.75;
+            document.getElementById('newRate').value = 8.75;
+            document.getElementById('originalTenure').value = 120;
+            document.getElementById('emisPaid').value = 17;
+            document.getElementById('grossIncome').value = 1200000;
+            document.getElementById('otherEMIs').value = 5000;
+            calculateAll();
+        }
+
+        function testScenario(type) {
+            const currentNewRate = parseFloat(document.getElementById('newRate').value);
+            
+            if (type === 'higher') {
+                document.getElementById('newRate').value = (currentNewRate + 1).toFixed(2);
+            } else if (type === 'lower') {
+                document.getElementById('newRate').value = Math.max(1, currentNewRate - 0.5).toFixed(2);
+            }
+            
+            calculateAll();
+            
+            // Show alert with scenario info
+            const newRate = document.getElementById('newRate').value;
+            const message = type === 'higher' ? 
+                `Scenario: Interest rate increased to ${newRate}%. Check the impact on your options.` :
+                `Scenario: Interest rate reduced to ${newRate}%. See the additional benefits!`;
+            
+            setTimeout(() => alert(message), 100);
+        }
+
+        // Initialize application
+        function initializeApp() {
+            calculateAll();
+            selectOption(2); // Default to Option 2
+            
+            // Set last updated date
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-IN');
+            
+            // Add slide-in animation to cards
+            const cards = document.querySelectorAll('.card-shadow');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('slide-in');
+                }, index * 100);
+            });
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Add input event listeners for real-time updates
+        ['originalAmount', 'currentRate', 'newRate', 'originalTenure', 'emisPaid', 'grossIncome', 'otherEMIs'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', calculateAll);
+                element.addEventListener('change', calculateAll);
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'r':
+                        e.preventDefault();
+                        resetToDefaults();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        window.print();
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        selectOption(1);
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        selectOption(2);
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        selectOption(3);
+                        break;
+                }
+            }
+        });
+
+        // Print styles and functionality
+        window.addEventListener('beforeprint', function() {
+            document.body.classList.add('printing');
+        });
+
+        window.addEventListener('afterprint', function() {
+            document.body.classList.remove('printing');
+        });
+    </script>
+</body>
+</html>
