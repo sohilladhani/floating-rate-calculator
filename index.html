@@ -8,18 +8,55 @@
     <style>
         @import url('https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css');
         
+        /* Dark mode variables */
+        :root {
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f3f4f6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-color: rgba(0,0,0,0.1);
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #475569;
+            --shadow-color: rgba(0,0,0,0.3);
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
+        [data-theme="dark"] .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #581c87 100%);
+        }
+        
         .card-shadow {
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px var(--shadow-color);
+            transition: all 0.3s ease;
         }
         
         .card-shadow:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 35px var(--shadow-color);
+        }
+        
+        [data-theme="dark"] .card-shadow:hover {
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         }
         
         .progress-bar {
@@ -27,27 +64,42 @@
         }
         
         .input-field {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+            color: var(--text-primary);
             transition: all 0.3s ease;
         }
         
         .input-field:focus {
             transform: scale(1.01);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        [data-theme="dark"] .input-field:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
         
         .option-card {
             transition: all 0.3s ease;
             cursor: pointer;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
         }
         
         .option-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 20px 40px var(--shadow-color);
         }
         
         .option-card.selected {
             border: 2px solid #3B82F6;
             background: linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%);
+        }
+        
+        [data-theme="dark"] .option-card.selected {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            border-color: #60a5fa;
         }
         
         .pulse-animation {
@@ -89,7 +141,7 @@
             left: 50%;
             width: 80px;
             height: 80px;
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
@@ -98,11 +150,141 @@
             display: none;
         }
         
+        /* Dark mode toggle switch */
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            transition: 0.4s;
+            border-radius: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "☀️";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        input:checked + .slider {
+            background: linear-gradient(135deg, #1e40af, #3730a3);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+            content: "🌙";
+        }
+        
+        /* Dark mode specific styles */
+        [data-theme="dark"] .text-gray-800 {
+            color: #f1f5f9 !important;
+        }
+        
+        [data-theme="dark"] .text-gray-600 {
+            color: #cbd5e1 !important;
+        }
+        
+        [data-theme="dark"] .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+        
+        [data-theme="dark"] .text-gray-700 {
+            color: #e2e8f0 !important;
+        }
+        
+        [data-theme="dark"] .bg-gray-50 {
+            background-color: var(--bg-tertiary) !important;
+        }
+        
+        [data-theme="dark"] .bg-gray-100 {
+            background-color: var(--bg-tertiary) !important;
+        }
+        
+        [data-theme="dark"] .bg-gray-200 {
+            background-color: #475569 !important;
+        }
+        
+        [data-theme="dark"] .border-gray-200,
+        [data-theme="dark"] .border-gray-300 {
+            border-color: var(--border-color) !important;
+        }
+        
+        /* Glowing effects for dark mode */
+        [data-theme="dark"] .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05);
+        }
+        
+        [data-theme="dark"] .progress-bar {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Enhanced button styles for dark mode */
+        [data-theme="dark"] button {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        [data-theme="dark"] button:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+        
+        /* Color scheme updates for dark mode */
+        [data-theme="dark"] .bg-blue-50 {
+            background-color: rgba(30, 58, 138, 0.2) !important;
+        }
+        
+        [data-theme="dark"] .bg-green-50 {
+            background-color: rgba(5, 46, 22, 0.3) !important;
+        }
+        
+        [data-theme="dark"] .bg-purple-50 {
+            background-color: rgba(88, 28, 135, 0.2) !important;
+        }
+        
+        [data-theme="dark"] .bg-yellow-50 {
+            background-color: rgba(146, 64, 14, 0.2) !important;
+        }
+        
+        [data-theme="dark"] .bg-red-50 {
+            background-color: rgba(127, 29, 29, 0.2) !important;
+        }
+        
+        [data-theme="dark"] .bg-orange-50 {
+            background-color: rgba(154, 52, 18, 0.2) !important;
+        }
+        
         @media print {
             .no-print { display: none !important; }
             .print-hidden { display: block !important; }
             .card-shadow { box-shadow: none !important; border: 1px solid #e5e7eb; }
             .gradient-bg { background: #f3f4f6 !important; color: #1f2937 !important; }
+            [data-theme="dark"] * { background: white !important; color: black !important; }
         }
     </style>
 </head>
@@ -111,8 +293,22 @@
     <div class="gradient-bg text-white py-8 mb-8">
         <div class="container mx-auto px-4">
             <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">Home Loan Calculator</h1>
-                <p class="text-blue-100 text-lg">Floating Interest Rate Calculator - RBI Compliant</p>
+                <div class="flex justify-between items-center mb-4">
+                    <div></div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-2">Home Loan Calculator</h1>
+                        <p class="text-blue-100 text-lg">Floating Interest Rate Calculator - RBI Compliant</p>
+                    </div>
+                    <!-- Dark Mode Toggle -->
+                    <div class="flex items-center space-x-3 no-print">
+                        <span class="text-sm text-blue-100">🌞</span>
+                        <label class="theme-toggle">
+                            <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="text-sm text-blue-100">🌙</span>
+                    </div>
+                </div>
                 <div class="mt-4 text-sm">
                     <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full">Real-time Calculations</span>
                     <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full ml-2">Three Strategic Options</span>
@@ -881,6 +1077,7 @@
 
         // Initialize application
         function initializeApp() {
+            loadTheme(); // Load saved theme first
             calculateAll();
             selectOption(2); // Default to Option 2
             
@@ -894,6 +1091,34 @@
                     card.classList.add('slide-in');
                 }, index * 100);
             });
+        }
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (themeToggle.checked) {
+                body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.checked = true;
+            } else {
+                document.body.removeAttribute('data-theme');
+                themeToggle.checked = false;
+            }
         }
 
         // Event listeners
